@@ -17,6 +17,7 @@ class	KmRedact( object ):
 		self._init_ip_hiding()
 		self._init_dns_hiding()
 		self._init_port_hiding()
+		self._init_email_hiding()
 		pass
 
 	def	main( self ):
@@ -47,7 +48,14 @@ class	KmRedact( object ):
 				help    = 'do not obscure IP addresses',
 			)
 			p.add_argument(
-				'-p',
+				'-M',
+				'--keep-email',
+				dest   = 'keep_email',
+				action = 'store_true',
+				help   = 'do not obscure email addresses',
+			)
+			p.add_argument(
+				'-P',
 				'--port',
 				dest   = 'keep_ports',
 				action = 'store_true',
@@ -91,6 +99,8 @@ class	KmRedact( object ):
 	def	process( self, f = sys.stdin ):
 		for line in f:
 			line = line.rstrip()
+			if not self.opts.keep_email:
+				line = self.hide_email( line )
 			if not self.opts.keep_ip:
 				line = self.hide_ip( line )
 			if not self.opts.keep_dns:
@@ -100,6 +110,8 @@ class	KmRedact( object ):
 			print line
 			pass
 		if self.opts.want_decoder_ring:
+			if not self.opts.keep_email:
+				self.dump_decoder( self.email_dict, 'Email Decoder' )
 			if not self.opts.keep_ip:
 				self.dump_decoder( self.ip_dict, 'IP Decoder' )
 			if not self.opts.keep_dns:
@@ -122,6 +134,31 @@ class	KmRedact( object ):
 			)
 			pass
 		return
+
+	def	_init_email_hiding( self ):
+		self.email_dict       = dict()
+		self.email_dict_count = 0
+		self.email_pattern    = r'[0-9_a-zA-Z.]+@[0-9_a-zA-Z.]+'
+		return
+
+	def	_hide_email( self, mo ):
+		email = mo.group( 0 )
+		if email not in self.email_dict:
+			self.email_dict_count += 1
+			replacement = '<EMAIL{0}>'.format(
+				self.email_dict_count
+			)
+			self.email_dict[ email ] = replacement
+		return self.email_dict[ email ]
+
+	def	hide_email( self, line ):
+		# print 'hide_dns={0}'.format( line )
+		hidden_line = re.sub(
+			self.email_pattern,
+			self._hide_email,
+			line
+		)
+		return hidden_line
 
 	def	_init_dns_hiding( self ):
 		self.dns_dict = dict()
