@@ -69,6 +69,24 @@ class	KmRedact( object ):
 				help   = 'show magic decoder ring',
 			)
 			p.add_argument(
+				'-s',
+				'--span',
+				dest    = 'spans',
+				action  = 'append',
+				metavar = 'l:r',
+				default = [],
+				help    = 'checks character range (1=based)',
+			)
+			p.add_argument(
+				'-t',
+				'--token',
+				dest = 'fields',
+				metavar = 'N',
+				action = 'append',
+				default = [],
+				help = 'check field (whitespace,1-based)',
+			)
+			p.add_argument(
 				'--version',
 				action = 'version',
 				version = Version,
